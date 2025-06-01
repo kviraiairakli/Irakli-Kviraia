@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Florista Georgia</title>
+    <link rel="icon" type="image/x-icon" href="media/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stylesCss/style.css">
+    <link rel="stylesheet" href="stylesCss/products.css">
+    <style>
+        /* New CSS for filled checkbox */
+        .filter-options label .checkmark.filled {
+            background-color: #a0522d; /* Example: Brown color */
+            border: 2px solid #a0522d;
+        }
+        .filter-options label .checkmark {
+            border: 2px solid #a0522d;
+        }
+    </style>
+</head>
+<body id="main">
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img id="navLogo" src="media/mainIcon.svg" alt="Florista Georgia Logo"/>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Shop</a></li>
+                    <li><a href="delivery.html">Delivery</a></li>
+                    <li><a href="aboutus.html">About Us</a></li>
+                    <li><a href="contactus.html">Contact Us</a></li>
+                    <li class="nav-item--push-right"><a href="#" id="loginLink">Login</a></li>
+                    <li><a href="#" id="registerLink">Register</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="products-hero">
+            <div class="products-hero-content">
+                <h1>Florista Georgia - Our Products</h1>
+                <p>Explore our beautiful collection of flowers and arrangements.</p>
+            </div>
+        </section>
+
+        <section class="filter-section">
+            <h2>Filter by Category</h2>
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" value="wedding" checked>
+                    <span class="checkmark" aria-hidden="true"></span>
+                    Wedding
+                </label>
+                <label>
+                    <input type="checkbox" value="birthday" checked>
+                    <span class="checkmark" aria-hidden="true"></span>
+                    Birthday
+                </label>
+                <label>
+                    <input type="checkbox" value="sympathy" checked>
+                    <span class="checkmark" aria-hidden="true"></span>
+                    Sympathy
+                </label>
+                <label>
+                    <input type="checkbox" value="anniversary" checked>
+                    <span class="checkmark" aria-hidden="true"></span>
+                    Anniversary
+                </label>
+                <label>
+                    <input type="checkbox" value="justbecause" checked>
+                    <span class="checkmark" aria-hidden="true"></span>
+                    Just Because
+                </label>
+            </div>
+        </section>
+
+        <section class="product-categories">
+            <div class="collections-grid">
+                <a href="#wedding-products" class="collection">
+                    <div class="collection-image-container">
+                        <img src="media/weddinghtml/eternal_flame.webp" alt="Collection">
+                        <div class="collection-overlay"></div>
+                    </div>
+                    <h3>Wedding</h3>
+                </a>
+                <a href="#birthday-products" class="collection">
+                    <div class="collection-image-container">
+                        <img src="media/birthdayhtml/crimson_ardour.webp" alt="Collection">
+                        <div class="collection-overlay"></div>
+                    </div>
+                    <h3>Birthday</h3>
+                </a>
+                 <a href="#sympathy-products" class="collection">
+                    <div class="collection-image-container">
+                        <img src="media/sympathyhtml/royal_red.webp" alt="Collection">
+                        <div class="collection-overlay"></div>
+                    </div>
+                    <h3>Sympathy</h3>
+                </a>
+                <a href="#anniversary-products" class="collection">
+                    <div class="collection-image-container">
+                        <img src="media/anniverssaryhtml/jubilee.webp" alt="Collection">
+                        <div class="collection-overlay"></div>
+                    </div>
+                    <h3>Anniversary</h3>
+                </a>
+                
+                <a href="#justbecause-products" class="collection">
+                    <div class="collection-image-container">
+                        <img src="media/sympathyhtml/blue-roses-2.jpg" alt="Collection">
+                        <div class="collection-overlay"></div>
+                    </div>
+                    <h3>Just Because</h3>
+                </a>
+            </div>
+        </section>
+
+        <section class="product-list">
+            <h2>All Products</h2>
+            <p>All of our products are made with love and care!</p>
+            <div class="products-container">
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy;2025 - 2095 Florista Georgia. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="aboutus.html">About Us</a>
+                <a href="delivery.html">Delivery</a>
+                <a href="contactus.html">Contact Us</a>
+                <a href="terms.html">Terms & Conditions</a>
+                <a href="terms.html">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        async function fetchProducts() {
+            try {
+                const response = await fetch('http://localhost:3000/api/products');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const products = await response.json();
+                return products;
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                return [];
+            }
+        }
+
+        async function displayProducts(filteredCategories = []) {
+            const products = await fetchProducts();
+            const productsContainer = document.querySelector('.products-container');
+            productsContainer.innerHTML = '';
+
+            if (products.length === 0) {
+                productsContainer.textContent = "Error loading products. Please try again later.";
+                return;
+            }
+
+            // If no categories are selected, show nothing
+            if (filteredCategories.length === 0) {
+                const noProductsMessage = document.createElement('p');
+                noProductsMessage.textContent = "No products match the selected filters.";
+                productsContainer.appendChild(noProductsMessage);
+                return; // Exit the function early
+            }
+
+            const productsByCategory = {};
+            products.forEach(product => {
+                if (!productsByCategory[product.category]) {
+                    productsByCategory[product.category] = [];
+                }
+                productsByCategory[product.category].push(product);
+            });
+
+            for (const category in productsByCategory) {
+                if (filteredCategories.includes(category)) {
+                    // Create category title only if it doesn't exist
+                    if (!document.getElementById(`${category}-products`)) {
+                        const categoryTitle = document.createElement('h2');
+                        categoryTitle.classList.add('category-title');
+                        categoryTitle.id = `${category}-products`;
+                        categoryTitle.textContent = `${category.charAt(0).toUpperCase() + category.slice(1)} Products`;
+                        productsContainer.appendChild(categoryTitle);
+                    }
+
+                    const categoryGrid = document.createElement('div');
+                    categoryGrid.classList.add('collections-grid');
+                    categoryGrid.setAttribute('data-category', category);
+
+                    productsByCategory[category].forEach(product => {
+                        const productLink = document.createElement('a');
+                        productLink.href = `purchase.html?id=${product.id}`; // Correctly link to purchase.html with product ID
+                        productLink.classList.add('collection');
+
+                        const imageContainer = document.createElement('div');
+                        imageContainer.classList.add('collection-image-container');
+
+                        const image = document.createElement('img');
+                        image.src = product.imageUrl;
+                        image.alt = product.name;
+
+                        const overlay = document.createElement('div');
+                        overlay.classList.add('collection-overlay');
+
+                        const productName = document.createElement('h3');
+                        productName.textContent = `"${product.name}"`;
+
+                        imageContainer.appendChild(image);
+                        imageContainer.appendChild(overlay);
+                        productLink.appendChild(imageContainer);
+                        productLink.appendChild(productName);
+                        categoryGrid.appendChild(productLink);
+                    });
+
+                    productsContainer.appendChild(categoryGrid);
+                }
+            }
+            updateCheckmarkStyles(filteredCategories);
+        }
+
+        function handleFilterChange() {
+            const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+            const selectedCategories = [];
+            filterCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selectedCategories.push(checkbox.value);
+                }
+            });
+            displayProducts(selectedCategories);
+        }
+
+        function updateCheckmarkStyles(selectedCategories) {
+            const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+            filterCheckboxes.forEach(checkbox => {
+                const checkmark = checkbox.nextElementSibling; // Get the checkmark span
+                if (selectedCategories.includes(checkbox.value)) {
+                    checkmark.classList.add('filled');
+                } else {
+                    checkmark.classList.remove('filled');
+                }
+            });
+        }
+
+        const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', handleFilterChange);
+        });
+
+        handleFilterChange();
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Form - Florista Georgia</title>
+    <link rel="icon" type="image/x-icon" href="media/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stylesCss/style.css">
+    <link rel="stylesheet" href="stylesCss/contactus.css">
+</head>
+<body id="main">
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img id="navLogo" src="media/mainIcon.svg" alt="Florista Georgia Logo"/>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Shop</a></li>
+                    <li><a href="delivery.html">Delivery</a></li>
+                    <li><a href="aboutus.html">About Us</a></li>
+                    <li><a href="contactus.html">Contact Us</a></li>
+                    <li class="nav-item--push-right"><a href="#" id="loginLink">Login</a></li>
+                    <li><a href="#" id="registerLink">Register</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="page-hero">
+            <div class="page-hero-content">
+                <h1>Purchase Information</h1>
+                <p>Please fill out the form below to complete your purchase.</p>
+            </div>
+        </section>
+
+        <section class="contact-us-content">
+            <div class="contact-form">
+                <h2>Your Details</h2>
+                <form id="purchaseForm">
+                    <input type="hidden" id="productId" name="productId">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone:</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address:</label>
+                        <textarea id="address" name="address" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">Submit Purchase</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy;2025 - 2095 Florista Georgia. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="aboutus.html">About Us</a>
+                <a href="delivery.html">Delivery</a>
+                <a href="contactus.html">Contact Us</a>
+                <a href="terms.html">Terms & Conditions</a>
+                <a href="terms.html">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            document.getElementById('productId').value = productId;
+
+            const form = document.getElementById('purchaseForm');
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/purchases', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        alert('Purchase information submitted successfully!');
+                        form.reset();
+                    } else {
+                        alert('Failed to submit purchase information.');
+                    }
+                } catch (error) {
+                    console.error('Error submitting purchase information:', error);
+                    alert('An error occurred while submitting the purchase information.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

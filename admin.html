@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console - Florista Georgia</title>
+    <link rel="icon" type="image/x-icon" href="media/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="stylesCss/style.css">
+    <link rel="stylesheet" href="stylesCss/admin.css">
+    <!-- Basic Modal Styles (can be moved to admin.css or style.css) -->
+    <style>
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal.active {
+            display: flex; /* Or block, depending on your layout */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+            border-radius: 8px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-header h2 {
+            margin: 0;
+        }
+        .close-button {
+            color: #aaa;
+            /* float: right; */ /* Not needed if using flexbox in header */
+            font-size: 28px;
+            font-weight: bold;
+            /* position: absolute;
+            top: 10px;
+            right: 20px; */
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group input[type="number"],
+        .form-group textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group textarea {
+            resize: vertical;
+        }
+        .btn-primary { /* Ensure this style is defined or use your existing button styles */
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="mainScript/home.js" defer></script> <!-- For nav visibility -->
+    <script src="mainScript/admin.js" defer></script>
+</head>
+<body id="main">
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo-link">
+                <img id="navLogo" src="media/mainIcon.svg" alt="Florista Georgia Logo"/>
+            </a>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="products.html">Shop</a></li>
+                    <li><a href="delivery.html">Delivery</a></li>
+                    <li><a href="aboutus.html">About Us</a></li>
+                    <li><a href="contactus.html">Contact Us</a></li>
+                    <li class="nav-item--push-right"><a href="#" id="loginLink">Login</a></li>
+                    <li><a href="#" id="registerLink">Register</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Admin Login</h2>
+                <span class="close-button" id="closeAdminLoginModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminLoginEmail">Email:</label>
+                        <input type="email" id="adminLoginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminLoginPassword">Password:</label>
+                        <input type="password" id="adminLoginPassword" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                    <p id="adminLoginError" style="color: red; display: none; margin-top: 10px;"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <main class="admin-console-container">
+        <section class="page-hero">
+            <div class="page-hero-content">
+                <h1>Admin Console</h1>
+                <p>Manage Your Products</p>
+            </div>
+        </section>
+
+        <section id="product-management">
+            <h2>Product List</h2>
+            <button id="showAddProductFormBtn" class="btn-primary">Add New Product</button>
+            <table id="productsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <!-- Product rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Add/Edit Product Modal -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="productModalTitle">Add Product</h2>
+                    <span class="close-button" id="closeProductModalBtn">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId" name="productId">
+                        <div class="form-group">
+                            <label for="productName">Product Name:</label>
+                            <input type="text" id="productName" name="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategory">Category:</label>
+                            <input type="text" id="productCategory" name="productCategory" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Price:</label>
+                            <input type="number" id="productPrice" name="productPrice" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productQuantity">Quantity:</label>
+                            <input type="number" id="productQuantity" name="productQuantity" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productDescription">Description:</label>
+                            <textarea id="productDescription" name="productDescription" rows="3"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="productImageURL">Image URL:</label>
+                            <input type="text" id="productImageURL" name="productImageURL">
+                        </div>
+                        <button type="submit" id="saveProductBtn" class="btn-primary">Save Product</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy;2025 - 2095 Florista Georgia. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="aboutus.html">About Us</a>
+                <a href="delivery.html">Delivery</a>
+                <a href="contactus.html">Contact Us</a>
+                <a href="terms.html">Terms & Conditions</a>
+                <a href="terms.html">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Login/Register Modals from index.html are not strictly needed here if admin login is handled by the new adminLoginModal -->
+    <!-- If you want them for some other reason, you can keep them, but they are separate from the admin page's own login flow. -->
+    <!-- <div class="modal-container"> -->
+        <!-- Login Modal (from index.html) -->
+        <!-- Register Modal (from index.html) -->
+    <!-- </div> -->
+
+</body>
+</html>
