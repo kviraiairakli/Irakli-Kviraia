@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purchase - Florista Georgia</title>
     <link rel="icon" type="image/x-icon" href="media/favicon.svg">
-    <link rel="stylesheet" href="stylesCss/style.css">
-    <link rel="stylesheet" href="stylesCss/purchase.css">
+    <link rel="stylesheet" href="stylesCss/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
@@ -60,54 +59,5 @@
             </div>
         </div>
     </footer>
-    <script>
-        async function fetchProduct(productId) {
-            try {
-                const response = await fetch(`http://localhost:3000/api/products/${productId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const product = await response.json();
-                return product;
-            } catch (error) {
-                console.error('Error fetching product:', error);
-                return null;
-            }
-        }
-
-        async function displayProduct() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-
-            if (!productId) {
-                console.error('Product ID is missing from the URL.');
-                const productContainer = document.querySelector('.product-container');
-                productContainer.textContent = 'Product ID is missing.';
-                return;
-            }
-
-            const product = await fetchProduct(productId);
-
-            if (product) {
-                document.getElementById('product-name').textContent = product.name;
-                document.getElementById('product-image').src = product.imageUrl;
-                document.getElementById('product-image').alt = product.name;
-                document.getElementById('product-description').textContent = product.description;
-                document.getElementById('product-price').textContent = `Price: $${product.price.toFixed(2)}`;
-            } else {
-                const productContainer = document.querySelector('.product-container');
-                productContainer.textContent = 'Product not found.';
-            }
-        }
-
-        // Function to handle the purchase button click
-        document.getElementById('purchase-button').addEventListener('click', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-            window.location.href = `purchaseForm.html?id=${productId}`;
-        });
-
-        displayProduct();
-    </script>
 </body>
 </html>

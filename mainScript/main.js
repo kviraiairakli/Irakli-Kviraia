@@ -1,5 +1,3 @@
-// Irakli-Kviraia/js/main.js
-
 // --- Global Configuration (Define once at the TOP) ---
 const BASE_URL = 'https://localhost:7038'; // Standardized API base URL
 
@@ -45,6 +43,7 @@ function updateNavVisibility() {
     const navLinks = document.querySelector('.nav-links');
     let adminLinkElement = document.getElementById('adminLink');
     let productsLinkElement = document.getElementById('productsLink'); // Assuming you have a products link
+    let logoutButton = document.getElementById('logoutButton'); // Assuming a logout button
 
     // Hide/show login/register links
     if (loginLinkElement) {
@@ -53,6 +52,12 @@ function updateNavVisibility() {
     if (registerLinkElement) {
         registerLinkElement.style.display = isLoggedIn ? 'none' : '';
     }
+
+    // Handle Logout button visibility
+    if (logoutButton) {
+        logoutButton.style.display = isLoggedIn ? '' : 'none';
+    }
+
 
     // Handle Admin link visibility
     if (isLoggedIn && userRole === 'Admin') { // Check for 'Admin' role as per your backend
@@ -130,22 +135,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(registrationData)
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.Message || 'Registration failed'); });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Registration successful:', data);
-                alert('Registration successful!');
-                closeModal(registerModalElement);
-                // Optionally, redirect the user or update UI
-            })
-            .catch(error => {
-                console.error('Error during registration:', error);
-                alert('Registration failed. ' + error.message);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.Message || 'Registration failed'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Registration successful:', data);
+                    alert('Registration successful!');
+                    closeModal(registerModalElement);
+                    // Optionally, redirect the user or update UI
+                })
+                .catch(error => {
+                    console.error('Error during registration:', error);
+                    alert('Registration failed. ' + error.message);
+                });
         });
     }
 
@@ -213,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('Login successful:', data);
                     alert('Login successful!');
                     localStorage.setItem('isLoggedIn', 'true');
-                    
+
                     // !!! IMPORTANT: Your backend login API MUST return a JWT token here.
                     // For example: { "token": "your.jwt.token", "role": "Admin", "userId": 123 }
                     // If your backend returns 'user_role' instead of 'role', adjust here.
@@ -226,11 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.role) { // Use 'role' from backend, not 'user_role' for consistency
                         localStorage.setItem('userRole', data.role);
                     } else if (data.user_role) { // Fallback if backend still sends 'user_role'
-                         localStorage.setItem('userRole', data.user_role);
+                        localStorage.setItem('userRole', data.user_role);
                     } else {
                         localStorage.removeItem('userRole');
                     }
-                    
+
                     if (data.userId) { // Assuming your backend sends 'userId'
                         localStorage.setItem('userId', data.userId);
                     } else if (data.user_id) { // Fallback if backend sends 'user_id'
@@ -242,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     updateNavVisibility();
                     closeModal(loginModalElement);
-                    
+
                     // Redirect based on role or to products page
                     const role = localStorage.getItem('userRole');
                     if (role === 'Admin') {
@@ -278,19 +283,304 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Page-Specific Initialization ---
+    // --- General Page-Specific Initialization ---
 
     // Initialize nav visibility on every page load
     updateNavVisibility();
 
-    // Admin Page specific logic (from admin.js)
+    // --- Purchase Form Handling ---
+    // This handles the form submission on purchaseForm.html
+    const purchaseForm = document.getElementById('purchaseForm');
+    if (purchaseForm) { // Ensure the form exists before attaching listener
+        const urlParams = new URLSearchParams(window.location.search);
+        const productIdForPurchaseForm = urlParams.get('id'); // Renamed to avoid conflict
+        const productIdElement = document.getElementById('productId');
+        if (productIdElement) {
+            productIdElement.value = productIdForPurchaseForm;
+        }
+
+        purchaseForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(purchaseForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/purchases`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    alert('Purchase information submitted successfully!');
+                    purchaseForm.reset();
+                } else {
+                    alert('Failed to submit purchase information.');
+                }
+            } catch (error) {
+                console.error('Error submitting purchase information:', error);
+                alert('An error occurred while submitting the purchase information.');
+            }
+        });
+    }
+
+    // --- Contact Form Handling ---
+    // This handles the form submission on contact.html
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) { // Ensure the form exists before attaching listener
+        contactForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(contactForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/contacts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    alert('Contact information submitted successfully!');
+                    contactForm.reset();
+                } else {
+                    alert('Failed to submit contact information.');
+                }
+            } catch (error) {
+                console.error('Error submitting contact information:', error);
+                alert('An error occurred while submitting the contact information.');
+            }
+        });
+    }
+
+    // --- Product Detail Display (for purchase.html) ---
+    // This handles displaying a single product's details on purchase.html
+    async function fetchProduct(id) {
+        try {
+            // Using BASE_URL for consistency
+            const response = await fetch(`${BASE_URL}/api/products/${id}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const product = await response.json();
+            return product;
+        } catch (error) {
+            console.error('Error fetching product:', error);
+            return null;
+        }
+    }
+
+    async function displayProductDetails() {
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        const currentProductId = currentUrlParams.get('id');
+
+        if (!currentProductId) {
+            console.error('Product ID is missing from the URL.');
+            const productContainer = document.querySelector('.product-container');
+            if (productContainer) {
+                productContainer.textContent = 'Product ID is missing.';
+            }
+            return;
+        }
+
+        const product = await fetchProduct(currentProductId);
+
+        if (product) {
+            // Check if elements exist before trying to update them
+            const productNameEl = document.getElementById('product-name');
+            const productImageEl = document.getElementById('product-image');
+            const productDescriptionEl = document.getElementById('product-description');
+            const productPriceEl = document.getElementById('product-price');
+
+            // IMPORTANT: Use product.productName, product.productImagePath, product.productDescription, product.productPrice
+            // based on your C# backend API response structure (camelCase).
+            if (productNameEl) productNameEl.textContent = product.productName;
+            if (productImageEl) {
+                productImageEl.src = product.productImagePath;
+                productImageEl.alt = product.productName;
+            }
+            if (productDescriptionEl) productDescriptionEl.textContent = product.productDescription;
+            if (productPriceEl) productPriceEl.textContent = `Price: $${parseFloat(product.productPrice).toFixed(2)}`; // Ensure price is float
+        } else {
+            const productContainer = document.querySelector('.product-container');
+            if (productContainer) {
+                productContainer.textContent = 'Product not found.';
+            }
+        }
+    }
+
+    // Function to handle the purchase button click (for product detail page)
+    const purchaseButtonOnDetail = document.getElementById('purchase-button');
+    if (purchaseButtonOnDetail) {
+        purchaseButtonOnDetail.addEventListener('click', () => {
+            const currentUrlParams = new URLSearchParams(window.location.search);
+            const currentProductId = currentUrlParams.get('id');
+            if (currentProductId) {
+                window.location.href = `purchaseForm.html?id=${currentProductId}`;
+            } else {
+                console.warn('Cannot navigate to purchase form: Product ID not found in URL.');
+                alert('Could not determine product to purchase.');
+            }
+        });
+    }
+
+    // Only call displayProductDetails if we are likely on a product detail page (e.g., purchase.html)
+    if (window.location.pathname.includes('purchase.html')) {
+        displayProductDetails();
+    }
+
+
+    // --- Product Listing & Filtering (for products.html) ---
+    async function fetchProductsForDisplay() {
+        try {
+            const response = await fetch(`${BASE_URL}/api/products`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const products = await response.json();
+            return products;
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            return [];
+        }
+    }
+
+    async function displayProductsInGrid(filteredCategories = []) {
+        const products = await fetchProductsForDisplay();
+        const productsContainer = document.querySelector('.products-container');
+        if (!productsContainer) {
+            console.error('Products container not found.');
+            return;
+        }
+        productsContainer.innerHTML = ''; // Clear previous content
+
+        if (products.length === 0) {
+            productsContainer.textContent = "No products found. Please try again later.";
+            return;
+        }
+
+        const productsToDisplay = filteredCategories.length === 0
+            ? products // If no categories are filtered, show all
+            : products.filter(product => filteredCategories.includes(product.productCategory.toLowerCase())); // Ensure case-insensitive match
+
+        if (productsToDisplay.length === 0) {
+            const noProductsMessage = document.createElement('p');
+            noProductsMessage.textContent = "No products match the selected filters.";
+            productsContainer.appendChild(noProductsMessage);
+            return;
+        }
+
+        const productsByCategory = {};
+        productsToDisplay.forEach(product => {
+            // Use product.productCategory from your C# backend
+            if (!productsByCategory[product.productCategory]) {
+                productsByCategory[product.productCategory] = [];
+            }
+            productsByCategory[product.productCategory].push(product);
+        });
+
+        for (const category in productsByCategory) {
+            // Only render category if it's in filteredCategories or if no filters are applied (meaning show all)
+            if (filteredCategories.length === 0 || filteredCategories.includes(category.toLowerCase())) {
+                let categoryTitle = document.getElementById(`${category}-products-title`);
+                if (!categoryTitle) {
+                    categoryTitle = document.createElement('h2');
+                    categoryTitle.classList.add('category-title');
+                    categoryTitle.id = `${category}-products-title`;
+                    categoryTitle.textContent = `${category.charAt(0).toUpperCase() + category.slice(1)} Products`;
+                    productsContainer.appendChild(categoryTitle);
+                }
+
+                const categoryGrid = document.createElement('div');
+                categoryGrid.classList.add('collections-grid');
+                categoryGrid.setAttribute('data-category', category);
+
+                productsByCategory[category].forEach(product => {
+                    const productLink = document.createElement('a');
+                    productLink.href = `purchase.html?id=${product.productId}`; // Use product.productId
+                    productLink.classList.add('collection');
+
+                    const imageContainer = document.createElement('div');
+                    imageContainer.classList.add('collection-image-container');
+
+                    const image = document.createElement('img');
+                    image.src = product.productImagePath; // Use product.productImagePath
+                    image.alt = product.productName;
+
+                    const overlay = document.createElement('div');
+                    overlay.classList.add('collection-overlay');
+
+                    const productName = document.createElement('h3');
+                    productName.textContent = `"${product.productName}"`; // Use product.productName
+
+                    imageContainer.appendChild(image);
+                    imageContainer.appendChild(overlay);
+                    productLink.appendChild(imageContainer);
+                    productLink.appendChild(productName);
+                    categoryGrid.appendChild(productLink);
+                });
+
+                productsContainer.appendChild(categoryGrid);
+            }
+        }
+        updateCheckmarkStyles(filteredCategories);
+    }
+
+    function handleFilterChange() {
+        const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+        const selectedCategories = [];
+        filterCheckboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                selectedCategories.push(checkbox.value);
+            }
+        });
+        displayProductsInGrid(selectedCategories);
+    }
+
+    function updateCheckmarkStyles(selectedCategories) {
+        const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+        filterCheckboxes.forEach(checkbox => {
+            const checkmark = checkbox.nextElementSibling; // Get the checkmark span
+            if (checkmark) {
+                if (selectedCategories.includes(checkbox.value)) {
+                    checkmark.classList.add('filled');
+                } else {
+                    checkmark.classList.remove('filled');
+                }
+            }
+        });
+    }
+
+    // Attach listeners for product filtering and initial display for products.html
+    if (window.location.pathname.includes('products.html')) {
+        const filterCheckboxes = document.querySelectorAll('.filter-options input[type="checkbox"]');
+        if (filterCheckboxes.length > 0) {
+            filterCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleFilterChange);
+            });
+            // Initial call to display products based on default checked filters
+            handleFilterChange();
+        } else {
+            // If no filter checkboxes are present but it's products.html, display all products
+            displayProductsInGrid([]); // Passing an empty array implies showing all
+        }
+    }
+
+
+    // --- Admin Page specific logic (from admin.js) ---
     if (window.location.pathname.includes('admin.html')) {
         const adminLoginModal = document.getElementById('adminLoginModal');
         const adminLoginForm = document.getElementById('adminLoginForm');
         const closeAdminLoginModalBtn = document.getElementById('closeAdminLoginModalBtn');
         const adminLoginErrorMsg = document.getElementById('adminLoginError');
 
-        let isAdminAuthenticated = false;
+        let isAdminAuthenticated = false; // Tracks if authenticated for this session on admin page
 
         function showAdminLoginModal() {
             if (adminLoginModal) {
@@ -315,17 +605,21 @@ document.addEventListener('DOMContentLoaded', () => {
             initializeAdminPageControls(); // Initialize the main admin page content
         }
 
+        // Initial check for admin access on admin.html
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         const userRole = localStorage.getItem('userRole');
         const token = localStorage.getItem('token'); // Check for token for full auth
 
         if (!isLoggedIn || userRole !== 'Admin' || !token) { // Added token check
+            // Clear any lingering non-admin state if they somehow got here
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userRole');
-            localStorage.removeItem('token'); // Ensure token is cleared if not admin
-            updateNavVisibility();
-            showAdminLoginModal();
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            updateNavVisibility(); // Ensure nav is updated to reflect non-admin state
+            showAdminLoginModal(); // Show the login modal for admin access
         } else {
+            // If already logged in as admin, initialize controls
             isAdminAuthenticated = true;
             initializeAdminPageControls();
         }
@@ -350,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (response.ok) {
                         const data = await response.json();
                         localStorage.setItem('isLoggedIn', 'true');
-                        
+
                         if (data.token) {
                             localStorage.setItem('token', data.token);
                         } else {
@@ -360,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (data.role) {
                             localStorage.setItem('userRole', data.role);
                         } else if (data.user_role) {
-                             localStorage.setItem('userRole', data.user_role);
+                            localStorage.setItem('userRole', data.user_role);
                         } else {
                             localStorage.removeItem('userRole');
                         }
@@ -379,7 +673,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             alert('Access Denied. You are not an admin.');
                             localStorage.removeItem('isLoggedIn');
                             localStorage.removeItem('userRole');
-                            localStorage.removeItem('token'); // Clear state for non-admin
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('userId');
                             updateNavVisibility();
                             closeAdminLoginModal();
                             redirectToHome();
@@ -441,20 +736,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const closeProductModalBtn = document.getElementById('closeProductModalBtn');
             const productForm = document.getElementById('productForm');
             const productModalTitle = document.getElementById('productModalTitle');
-            const productIdInput = document.getElementById('productId'); // Hidden input for product ID
+            const adminProductIdInput = document.getElementById('adminProductId'); // Renamed to avoid ID conflict
+            // Ensure you update your admin.html to use id="adminProductId" for the hidden input
 
             // --- Modal Handling for Admin Product Forms ---
             function openAdminProductModal(mode = 'add', product = null) {
                 if (productForm) productForm.reset();
-                if (productIdInput) productIdInput.value = '';
+                if (adminProductIdInput) adminProductIdInput.value = '';
 
                 if (productModalTitle) {
                     if (mode === 'add') {
                         productModalTitle.textContent = 'Add New Product';
                     } else if (mode === 'edit' && product) {
                         productModalTitle.textContent = 'Edit Product';
-                        if (productIdInput) productIdInput.value = product.productId; // Use camelCase productId
-                        
+                        if (adminProductIdInput) adminProductIdInput.value = product.productId; // Use camelCase productId
+
                         // Use camelCase property names from backend API
                         document.getElementById('productName').value = product.productName || '';
                         document.getElementById('productCategory').value = product.productCategory || '';
@@ -534,10 +830,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 productForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
 
-                    const id = productIdInput ? productIdInput.value : '';
+                    const id = adminProductIdInput ? adminProductIdInput.value : ''; // Use adminProductIdInput
                     
                     const productData = {
-                        productId: id || 0, // Include productId for PUT, 0 for POST (will be ignored by backend on POST)
+                        productId: id ? parseInt(id) : 0, // Include productId for PUT, 0 for POST (will be ignored by backend on POST)
                         productCategory: document.getElementById('productCategory').value,
                         productName: document.getElementById('productName').value,
                         productQuantity: parseInt(document.getElementById('productQuantity').value),
@@ -627,339 +923,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } // End of initializeAdminPageControls()
     } // End of admin.html specific logic
-
-
-    // Products Page specific logic (using card grid and dynamic forms)
-    if (window.location.pathname.includes('products.html')) {
-        // This is the new product display/management for the general products page
-        // It uses the dynamic form creation approach.
-
-        // Function to fetch and display products in a grid (from products.js logic)
-        async function showProducts() {
-            const productsManagementSection = document.getElementById('productsManagementSection');
-            if (!productsManagementSection) {
-                console.error("productsManagementSection div not found in products.html. Ensure the ID is correct.");
-                return;
-            }
-
-            productsManagementSection.innerHTML = '<p>Loading products...</p>'; // Initial loading message
-
-            const role = localStorage.getItem('userRole'); // Use 'userRole' from your login
-            const isAdmin = role === 'Admin';
-
-            try {
-                const response = await fetch(`${BASE_URL}/api/Products`, {
-                    method: 'GET',
-                    headers: getAuthHeaders() // Includes JWT token from localStorage (if available)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        productsManagementSection.innerHTML = '<h2>You need to be logged in to view products.</h2><p>Please log in through the Home page.</p>';
-                    } else if (response.status === 403) {
-                        productsManagementSection.innerHTML = '<h2>You do not have permission to view products.</h2>';
-                    } else {
-                        const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                        productsManagementSection.innerHTML = `<h2>Failed to load products: ${errorData.message || response.statusText}</h2>`;
-                    }
-                    return;
-                }
-
-                const products = await response.json();
-
-                productsManagementSection.innerHTML = `
-                    ${isAdmin ? '<button id="addNewProductBtn" class="btn btn-success my-3">Add New Product</button>' : ''}
-                    <div id="createUpdateProductFormContainer" class="hidden my-4"></div>
-                    <div id="productsListContainer"></div>
-                `;
-
-                if (isAdmin) {
-                    document.getElementById('addNewProductBtn').addEventListener('click', showCreateProductForm);
-                }
-
-                const productsListContainer = document.getElementById('productsListContainer');
-
-                if (products.length === 0) {
-                    productsListContainer.innerHTML = '<p>No products found.</p>';
-                    return;
-                }
-
-                const productsGrid = document.createElement('div');
-                productsGrid.className = 'row';
-
-                products.forEach(product => {
-                    const productCard = document.createElement('div');
-                    productCard.className = 'col-md-4 mb-4';
-
-                    productCard.innerHTML = `
-                        <div class="card h-100">
-                            <img src="${product.productImagePath || 'https://via.placeholder.com/150/0000FF/FFFFFF?text=No+Image'}" class="card-img-top" alt="${product.productName}" style="height: 180px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title">${product.productName}</h5>
-                                <p class="card-text">Category: ${product.productCategory}</p>
-                                <p class="card-text">Price: $${product.productPrice.toFixed(2)}</p>
-                                <p class="card-text">Quantity: ${product.productQuantity}</p>
-                            </div>
-                            ${isAdmin ? `
-                            <div class="card-footer d-flex justify-content-around">
-                                <button class="btn btn-warning btn-sm edit-product-btn" data-id="${product.productId}">Edit</button>
-                                <button class="btn btn-danger btn-sm delete-product-btn" data-id="${product.productId}">Delete</button>
-                            </div>
-                            ` : ''}
-                        </div>
-                    `;
-                    productsGrid.appendChild(productCard);
-                });
-                productsListContainer.appendChild(productsGrid);
-
-                if (isAdmin) {
-                    document.querySelectorAll('.edit-product-btn').forEach(button => {
-                        button.addEventListener('click', (event) => showUpdateProductForm(event.target.dataset.id));
-                    });
-                    document.querySelectorAll('.delete-product-btn').forEach(button => {
-                        button.addEventListener('click', (event) => deleteProduct(event.target.dataset.id));
-                    });
-                }
-
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                productsManagementSection.innerHTML = `<h2>Error loading products. Please try again.</h2><p>${error.message}</p>`;
-            }
-        }
-
-        // Generic function to render a product form (for create or update)
-        function renderProductForm(product = {}, isUpdate = false) {
-            const formContainer = document.getElementById('createUpdateProductFormContainer');
-            const productsListContainer = document.getElementById('productsListContainer');
-
-            productsListContainer.classList.add('hidden');
-            formContainer.classList.remove('hidden');
-
-            const formTitle = isUpdate ? `Update Product (ID: ${product.productId})` : 'Create New Product';
-            const submitButtonText = isUpdate ? 'Update Product' : 'Create Product';
-            const productIdField = isUpdate ? `<input type="hidden" id="formProductId" value="${product.productId}">` : '';
-
-            formContainer.innerHTML = `
-                <h2 class="mb-3">${formTitle}</h2>
-                <form id="productForm">
-                    ${productIdField}
-                    <div class="mb-3">
-                        <label for="formProductCategory" class="form-label">Category</label>
-                        <input type="text" class="form-control" id="formProductCategory" value="${product.productCategory || ''}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="formProductName" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="formProductName" value="${product.productName || ''}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="formProductQuantity" class="form-label">Quantity</label>
-                        <input type="text" class="form-control" id="formProductQuantity" value="${product.productQuantity || ''}" pattern="[0-9]{1,3}" title="Max 3 digits" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="formProductPrice" class="form-label">Price</label>
-                        <input type="number" step="0.01" class="form-control" id="formProductPrice" value="${product.productPrice || ''}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="formProductImage" class="form-label">Image Path</label>
-                        <input type="text" class="form-control" id="formProductImage" value="${product.productImagePath || ''}">
-                    </div>
-                    <button type="submit" class="btn btn-success">${submitButtonText}</button>
-                    <button type="button" class="btn btn-secondary" onclick="hideProductForm()">Cancel</button>
-                </form>
-            `;
-
-            document.getElementById('productForm').onsubmit = async (event) => {
-                event.preventDefault();
-                const productData = {
-                    productCategory: document.getElementById('formProductCategory').value,
-                    productName: document.getElementById('formProductName').value,
-                    productQuantity: document.getElementById('formProductQuantity').value,
-                    productPrice: parseFloat(document.getElementById('formProductPrice').value),
-                    productImagePath: document.getElementById('formProductImage').value
-                };
-
-                if (isUpdate) {
-                    productData.productId = document.getElementById('formProductId').value;
-                    await updateProductApiCall(productData);
-                } else {
-                    await createProductApiCall(productData);
-                }
-                hideProductForm();
-            };
-        }
-
-        // Hides the form and shows the product list again
-        function hideProductForm() {
-            document.getElementById('createUpdateProductFormContainer').classList.add('hidden');
-            document.getElementById('productsListContainer').classList.remove('hidden');
-            showProducts(); // Re-fetch and display products to ensure list is up-to-date
-        }
-
-        // --- ADMIN-ONLY Product Actions for Products Page (if user is Admin) ---
-
-        function showCreateProductForm() {
-            renderProductForm({}, false);
-        }
-
-        async function createProductApiCall(newProductData) {
-            console.log('Attempting to create product:', newProductData);
-            try {
-                const response = await fetch(`${BASE_URL}/api/Products`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(newProductData)
-                });
-                const data = await response.json().catch(() => ({ message: response.statusText }));
-                if (response.ok) {
-                    console.log('Product created successfully:', data);
-                    alert('Product created successfully!');
-                } else {
-                    console.error('Failed to create product:', response.status, data);
-                    alert(`Failed to create product: ${data.message || response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error creating product:', error);
-                alert('Error creating product. See console for details.');
-            }
-        }
-
-        async function showUpdateProductForm(productId) {
-            console.log(`Fetching product for update: ${productId}`);
-            try {
-                const response = await fetch(`${BASE_URL}/api/Products/${productId}`, {
-                    method: 'GET',
-                    headers: getAuthHeaders()
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                    alert(`Failed to fetch product for update: ${errorData.message || response.statusText}`);
-                    return;
-                }
-                const product = await response.json();
-                renderProductForm(product, true);
-            } catch (error) {
-                console.error('Error fetching product for update:', error);
-                alert('Error loading product for update. See console for details.');
-            }
-        }
-
-        async function updateProductApiCall(productData) {
-            console.log('Attempting to update product:', productData);
-            try {
-                const response = await fetch(`${BASE_URL}/api/Products/${productData.productId}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(productData)
-                });
-                if (response.status === 204) {
-                    console.log('Product updated successfully.');
-                    alert('Product updated successfully!');
-                } else {
-                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                    console.error('Failed to update product:', response.status, errorData);
-                    alert(`Failed to update product: ${errorData.message || response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error updating product:', error);
-                alert('Error updating product. See console for details.');
-            }
-        }
-
-        async function deleteProduct(productId) {
-            if (!confirm(`Are you sure you want to delete product ID: ${productId}?`)) {
-                return;
-            }
-            console.log(`Attempting to delete product ID: ${productId}`);
-            try {
-                const response = await fetch(`${BASE_URL}/api/Products/${productId}`, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders()
-                });
-                if (response.status === 204) {
-                    console.log('Product deleted successfully.');
-                    alert('Product deleted successfully!');
-                    showProducts();
-                } else if (response.status === 404) {
-                    console.warn(`Product with ID ${productId} not found for deletion.`);
-                    alert('Product not found for deletion.');
-                } else {
-                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                    console.error('Failed to delete product:', response.status, errorData);
-                    alert(`Failed to delete product: ${errorData.message || response.statusText}`);
-                }
-            } catch (error) {
-                console.error('Error deleting product:', error);
-                alert('Error deleting product. See console for details.');
-            }
-        }
-        
-        // Initial call to load products when on products.html
-        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        if (isLoggedIn) {
-            showProducts();
-        } else {
-            // Optional: Show a message or redirect if not logged in
-            const productsManagementSection = document.getElementById('productsManagementSection');
-            if (productsManagementSection) {
-                productsManagementSection.innerHTML = '<h2>Please log in to view products.</h2>';
-            }
-        }
-    } // End of products.html specific logic
-
-
-    // Purchase Page specific logic (from purchase.js)
-    if (window.location.pathname.includes('purchase.html')) {
-        const productNameElement = document.getElementById('product-name');
-        const productPriceElement = document.getElementById('product-price');
-
-        function getProductIdFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
-        }
-
-        const productId = getProductIdFromUrl();
-
-        if (productId) {
-            fetch(`${BASE_URL}/api/Products/${productId}`, { // Use BASE_URL and correct endpoint for single product
-                headers: getAuthHeaders() // Include auth headers if purchase page requires login to see details
-            })
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 404) throw new Error('Product not found.');
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(product => {
-                if (product) {
-                    // Use camelCase properties as per C# backend
-                    productNameElement.textContent = product.productName;
-                    productPriceElement.textContent = `Price: $${product.productPrice.toFixed(2)}`;
-                    
-                    const productIdInput = document.getElementById('productId'); // Assuming an input for purchase form
-                    if (productIdInput) {
-                        productIdInput.value = product.productId;
-                    }
-                } else {
-                    const productContainer = document.querySelector('.product-details .product-container');
-                    if (productContainer) {
-                        productContainer.textContent = 'Product not found.';
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching product details:', error);
-                const productContainer = document.querySelector('.product-details .product-container');
-                if (productContainer) {
-                    productContainer.textContent = `Failed to load product details: ${error.message}`;
-                }
-            });
-        } else {
-            const productContainer = document.querySelector('.product-details .product-container');
-            if (productContainer) {
-                productContainer.textContent = 'No product selected.';
-            }
-        }
-    } // End of purchase.html specific logic
-
-}); // End of main DOMContentLoaded
+});

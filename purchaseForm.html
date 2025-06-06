@@ -8,8 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="stylesCss/style.css">
-    <link rel="stylesheet" href="stylesCss/contactus.css">
+    <link rel="stylesheet" href="stylesCss/main.css">
 </head>
 <body id="main">
     <header>
@@ -78,40 +77,5 @@
             </div>
         </div>
     </footer>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-            document.getElementById('productId').value = productId;
-
-            const form = document.getElementById('purchaseForm');
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault();
-
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
-
-                try {
-                    const response = await fetch('http://localhost:3000/api/purchases', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data),
-                    });
-
-                    if (response.ok) {
-                        alert('Purchase information submitted successfully!');
-                        form.reset();
-                    } else {
-                        alert('Failed to submit purchase information.');
-                    }
-                } catch (error) {
-                    console.error('Error submitting purchase information:', error);
-                    alert('An error occurred while submitting the purchase information.');
-                }
-            });
-        });
-    </script>
 </body>
 </html>
