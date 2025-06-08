@@ -301,14 +301,6 @@ html {
     scroll-behavior: smooth;
 }
 
-/* Modal Styles (General, from style.css) */
-.modal-container {
-    /* This container isn't strictly necessary for one modal,
-        but can be useful if you have many or want to group them.
-        For now, it doesn't need specific styles unless you want to manage
-        multiple modal overlays differently. */
-}
-
 .modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
