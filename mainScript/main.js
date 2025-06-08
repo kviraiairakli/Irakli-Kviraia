@@ -1,5 +1,5 @@
 // --- Global Configuration (Define once at the TOP) ---
-const BASE_URL = 'https://localhost:7038'; // Standardized API base URL
+const BASE_URL = 'https://localhost:7001'; // Standardized API base URL
 
 // --- Global Helper Functions ---
 
