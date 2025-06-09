@@ -1,5 +1,5 @@
 // --- Global Configuration (Define once at the TOP) ---
-const BASE_URL = 'https://localhost:7038'; // Standardized API base URL
+const BASE_URL = 'https://localhost:7001'; // Standardized API base URL
 
 // --- Global Helper Functions ---
 
@@ -12,7 +12,7 @@ function getAuthHeaders() {
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-    return headers;
+    return headers
 }
 
 // Function to open any modal
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchProduct(id) {
         try {
             // Using BASE_URL for consistency
-            const response = await fetch(`${BASE_URL}/api/products/${id}`);
+            const response = await fetch(`https://localhost:7001/api/products/${id}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
