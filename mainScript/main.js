@@ -478,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const productsByCategory = {};
         productsToDisplay.forEach(product => {
-            // Use product.productCategory from your C# backend
             if (!productsByCategory[product.productCategory]) {
                 productsByCategory[product.productCategory] = [];
             }
@@ -530,6 +529,57 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         updateCheckmarkStyles(filteredCategories);
+    }
+
+    async function displayProductsSimple(filteredCategories = []) {
+        const products = await fetchProductsForDisplay();
+        const productsContainer = document.querySelector('.products-container');
+        if (!productsContainer) return;
+
+        productsContainer.innerHTML = '';
+
+        // Filter products if needed
+        const productsToDisplay = filteredCategories.length === 0
+            ? products
+            : products.filter(product => filteredCategories.includes(product.productCategory.toLowerCase()));
+
+        if (productsToDisplay.length === 0) {
+            productsContainer.textContent = "No products found.";
+            return;
+        }
+
+        // Create a grid for products
+        const grid = document.createElement('div');
+        grid.classList.add('collections-grid');
+
+        productsToDisplay.forEach(product => {
+            const productLink = document.createElement('a');
+            productLink.href = `purchase.html?id=${product.productId}`;
+            productLink.className = 'collection';
+
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'collection-image-container';
+
+            const img = document.createElement('img');
+            img.src = product.productImagePath;
+            img.alt = product.productName;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'collection-overlay';
+
+            imageContainer.appendChild(img);
+            imageContainer.appendChild(overlay);
+
+            const name = document.createElement('h3');
+            name.textContent = product.productName;
+
+            productLink.appendChild(imageContainer);
+            productLink.appendChild(name);
+
+            grid.appendChild(productLink);
+        });
+
+        productsContainer.appendChild(grid);
     }
 
     function handleFilterChange() {
